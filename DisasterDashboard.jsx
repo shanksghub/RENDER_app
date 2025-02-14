@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 
+
+REACT_APP_BACKEND_URL=https://render-app-x3wi.onrender.com
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL; 
 
 const DisasterDashboard = () => {
