@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL; 
 
@@ -10,9 +11,12 @@ const DisasterDashboard = () => {
   const [selectedDisaster, setSelectedDisaster] = useState(null);
   const [structuredData, setStructuredData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [userIds, setUserIds] = useState([]); // Selected user IDs
+  const [availableUsers, setAvailableUsers] = useState([]); // Fetch user list
 
   useEffect(() => {
     fetchDisasters();
+    fetchUsers();
   }, []);
 
   const fetchDisasters = async () => {
@@ -21,6 +25,15 @@ const DisasterDashboard = () => {
       setDisasters(response.data);
     } catch (error) {
       console.error("Error fetching disasters", error);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/users`); // Fetch user list
+      setAvailableUsers(response.data);
+    } catch (error) {
+      console.error("Error fetching users", error);
     }
   };
 
@@ -38,11 +51,21 @@ const DisasterDashboard = () => {
     setLoading(false);
   };
 
+  const toggleUserSelection = (userId) => {
+    setUserIds((prev) =>
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+    );
+  };
+
   const sendAlert = async () => {
+    if (userIds.length === 0) {
+      alert("Select at least one user to send the alert.");
+      return;
+    }
     try {
       await axios.post(`${BACKEND_URL}/send-alert`, {
         message: structuredData,
-        selected_users: ["+1234567890"], // Replace with actual user phone numbers
+        selected_user_ids: userIds, // Send user IDs, not phone numbers
       });
       alert("Alert sent successfully!");
     } catch (error) {
@@ -76,9 +99,24 @@ const DisasterDashboard = () => {
                   <p><strong>Time:</strong> {structuredData.time}</p>
                   <p><strong>Severity:</strong> {structuredData.severity}</p>
                   <p><strong>Excerpt:</strong> "{structuredData.excerpt}"</p>
-                  <Button onClick={sendAlert} className="mt-2">Send Alert</Button>
                 </CardContent>
               </Card>
+
+              {/* User Selection for Alerts */}
+              <h3 className="font-semibold mt-4">Select Users to Notify</h3>
+              <div className="max-h-40 overflow-y-auto">
+                {availableUsers.map((user) => (
+                  <div key={user.id} className="flex items-center gap-2">
+                    <Checkbox
+                      checked={userIds.includes(user.id)}
+                      onCheckedChange={() => toggleUserSelection(user.id)}
+                    />
+                    <span>{user.name} (ID: {user.id})</span>
+                  </div>
+                ))}
+              </div>
+
+              <Button onClick={sendAlert} className="mt-4">Send Alert</Button>
             </div>
           )}
         </div>
