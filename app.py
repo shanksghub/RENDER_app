@@ -13,7 +13,7 @@ MISTRAL_API_URL = "https://api.mistral.ai/v1/chat/completions"
 MISTRAL_API_KEY = os.getenv(v7FUsj9Tzxj46C5sm8XLVgMFGcpx4q2X)
 
 # REST API for sending alerts (Replace with actual URL)
-USER_API_URL = "https://your-api.com/send-alert"
+USER_API_URL = "https://lyyzq298h5.execute-api.ap-south-1.amazonaws.com/15/RNDR"
 
 # Fetch latest disasters from ReliefWeb
 @app.route("/disasters", methods=["GET"])
