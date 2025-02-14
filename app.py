@@ -31,6 +31,16 @@ def get_disasters():
     ]
     return jsonify(disasters)
 
+@app.route("/users", methods=["GET"])
+def get_users():
+    users = [
+        {"id": "user123", "name": "Alice Johnson"},
+        {"id": "user456", "name": "Bob Smith"},
+        {"id": "user789", "name": "Charlie Lee"},
+    ]
+    return jsonify(users)
+
+
 # Analyze disaster with Mistral AI
 @app.route("/analyze", methods=["POST"])
 def analyze_disaster():
