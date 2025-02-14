@@ -10,7 +10,7 @@ RELIEFWEB_RSS_URL = "https://feeds.reliefweb.int/rss/disasters"
 
 # Mistral API (Replace with actual API Key)
 MISTRAL_API_URL = "https://api.mistral.ai/v1/chat/completions"
-MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
+MISTRAL_API_KEY = os.getenv(v7FUsj9Tzxj46C5sm8XLVgMFGcpx4q2X)
 
 # REST API for sending alerts (Replace with actual URL)
 USER_API_URL = "https://your-api.com/send-alert"
