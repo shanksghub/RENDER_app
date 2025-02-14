@@ -1,70 +1,87 @@
 from flask import Flask, request, jsonify
 import requests
-import boto3
 import os
 import feedparser
 
 app = Flask(__name__)
 
-# AWS SNS Setup (Replace with your region)
-sns = boto3.client("sns", region_name="ap-south-1")
-
-# ReliefWeb RSS Feed
+# ReliefWeb RSS Feed URL
 RELIEFWEB_RSS_URL = "https://feeds.reliefweb.int/rss/disasters"
 
-# Mistral API (Replace with actual endpoint & API Key)
+# Mistral API (Replace with actual API Key)
 MISTRAL_API_URL = "https://api.mistral.ai/v1/chat/completions"
-MISTRAL_API_KEY = os.getenv(v7FUsj9Tzxj46C5sm8XLVgMFGcpx4q2X)
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 
-# Fetch latest disasters from ReliefWeb RSS Feed
+# REST API for sending alerts (Replace with actual URL)
+USER_API_URL = "https://your-api.com/send-alert"
+
+# Fetch latest disasters from ReliefWeb
 @app.route("/disasters", methods=["GET"])
 def get_disasters():
     feed = feedparser.parse(RELIEFWEB_RSS_URL)
-    
-    disasters = []
-    for entry in feed.entries:
-        disasters.append({
+    disasters = [
+        {
             "id": entry.id,
             "title": entry.title,
             "description": entry.summary,
             "published": entry.published,
-            "link": entry.link
-        })
-    
+            "link": entry.link,
+        }
+        for entry in feed.entries
+    ]
     return jsonify(disasters)
 
-# Process disaster info with Mistral AI
+# Analyze disaster with Mistral AI
 @app.route("/analyze", methods=["POST"])
 def analyze_disaster():
     data = request.json
     text = data.get("text", "")
-    
+
     mistral_payload = {
         "model": "mistral-medium",
         "messages": [
-            {"role": "system", "content": "Extract disaster details including type, location, severity, and a relevant excerpt."},
-            {"role": "user", "content": text}
-        ]
+            {
+                "role": "system",
+                "content": "Extract disaster details including type, location, severity, and provide a relevant excerpt.",
+            },
+            {"role": "user", "content": text},
+        ],
     }
-    
-    headers = {"Authorization": f"Bearer {MISTRAL_API_KEY}", "Content-Type": "application/json"}
-    
+
+    headers = {
+        "Authorization": f"Bearer {MISTRAL_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
     mistral_response = requests.post(MISTRAL_API_URL, json=mistral_payload, headers=headers)
-    structured_data = mistral_response.json().get("choices", [{}])[0].get("message", {}).get("content", {})
-    
+    response_json = mistral_response.json()
+
+    # Extract structured data + excerpt from Mistral response
+    structured_data = response_json.get("choices", [{}])[0].get("message", {}).get("content", {})
+
     return jsonify(structured_data)
 
-# Send alert after approval
+# Send alert to REST API for specific user_ids
 @app.route("/send-alert", methods=["POST"])
 def send_alert():
     data = request.json
-    message = data.get("message", "Disaster alert!")
-    phone_numbers = data.get("selected_users", [])  # List of phone numbers
-    
-    for phone in phone_numbers:
-        sns.publish(PhoneNumber=phone, Message=message)
-    
-    return jsonify({"status": "Success", "message": "Alerts sent"})
+    selected_user_ids = data.get("selected_user_ids", [])
+    message = data.get("message", "Disaster Alert!")
+
+    payload = {
+        "user_ids": selected_user_ids,
+        "alert_message": message
+    }
+
+    response = requests.post(USER_API_URL, json=payload)
+
+    if response.status_code == 200:
+        return jsonify({"status": "Success", "message": "Alerts sent!"}), 200
+    else:
+        return jsonify({"status": "Failed", "message": "Error sending alerts"}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+    
